@@ -28,6 +28,7 @@ var help = require('./routes/help');
 var app = express();
 var httpProxy = require('http-proxy');
 var apiProxy = httpProxy.createProxyServer();
+var nextProxy = require('./routes/next_v2_proxy');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -148,6 +149,7 @@ app.use('/status', systemStatus);  // system status page
 app.use('/help', help);
 app.use('/uploads', uploads);
 app.use('/users', users);
+app.use('/v2', nextProxy);
 
 // MTB Taxon Overview Route
 app.use('/pathogens/mtb', [
