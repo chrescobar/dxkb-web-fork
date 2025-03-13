@@ -27,9 +27,7 @@ ecosystem.config.cjs
 
 # BRC configs
 p3-web.conf
-p3-dev.conf
-p3-test.conf
-p3-*.conf
+dxkb-web.conf
 
 # Editor & IDE settings
 .vscode/

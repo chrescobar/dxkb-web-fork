@@ -1,9 +1,10 @@
 {
-  "name": "p3-web",
+  "name": "dxkb-web",
   "version": "0.1.12",
   "private": true,
   "scripts": {
-    "start": "node ./bin/p3-web",
+    "start": "node ./bin/dxkb-web",
+    "dev": "node ./bin/dxkb-web -p 3018",
     "test": "cross-env NODE_ENV=test gulp srcfiles && npm run move-src && eslint . && jest --config jest.config.json --notify",
     "move-src": "cp gulpified/app/app.js src/app/ && cp gulpified/app/p3app.js src/app/ && cp gulpified/widget/LoginForm.js src/widget",
     "xxxeslint:fix": "./node_modules/eslint/bin/eslint.js --fix public/js/p3",

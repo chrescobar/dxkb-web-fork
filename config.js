@@ -2,7 +2,7 @@ const nconf = require('nconf');
 const path = require('path');
 
 const defaults = {
-  'http_port': 3000,
+  'http_port': 3018,
   'application_id': 'patric3',
   'p3_clientId': 'patric3',
   'p3_clientSecret': 'patric3',
@@ -38,7 +38,7 @@ const defaults = {
   linkedinConfigFile: path.join(__dirname, 'linkedin.txt')
 };
 
-const config_filename = 'p3-web.conf';
+const config_filename = 'dxkb-web.conf';
 const config_file = path.join(__dirname, config_filename);
 
 module.exports = nconf.argv().env().file(config_file).defaults(defaults);

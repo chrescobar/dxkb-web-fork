@@ -1,11 +1,11 @@
 #!/usr/bin/env node
-var debug = require('debug')('p3-web');
+var debug = require('debug')('dxkb-web');
 var app = require('../app');
 var conf = require('../config');
 
-debug('Launching p3-web...');
+debug('Launching dxkb-web...');
 
-app.set('port', conf.get('http_port') || 3000);
+app.set('port', conf.get('http_port') || 3018);
 
 var server = app.listen(app.get('port'), function () {
   debug('Express server listening on port ' + server.address().port);

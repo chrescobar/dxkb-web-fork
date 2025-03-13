@@ -10,7 +10,7 @@ exports.config = {
   /**
    * Array of application names.
    */
-  app_name: ['P3-WebApp'],
+  app_name: ['dxkb-web'],
   /**
    * Your New Relic license key.
    */
