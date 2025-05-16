@@ -2,7 +2,7 @@ const updateList = [
     {
         title: "Breaking the ExaFLOPS Barrier",
         link: "https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=10793126&tag=1",
-        image: "http://localhost:3000/patric/images/cepi/exaflops.png",
+        image: "patric/images/cepi/exaflops.png",
         description: "A presentation for a scalable, end-to-end workflow for protein design. By augmenting protein sequences with natural language descriptions of their biochemical properties, the presenters train generative models that can be preferentially aligned with protein fitness landscapes."
     }
 /*
