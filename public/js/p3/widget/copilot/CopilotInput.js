@@ -74,17 +74,13 @@ define([
         var wrapperDiv = domConstruct.create('div', {
           class: 'copilot-input-wrapper',
           id: 'copilot-input-wrapper',
-          style: 'height: 95%;'
-          class: 'copilot-input-wrapper',
-          id: 'copilot-input-wrapper'
+          style: 'height: 95%;',
         }, this.containerNode);
 
         // Create settings panel
         var settingsDiv = domConstruct.create('div', {
           class: 'copilot-input-settings',
-          id: 'copilot-input-settings'
-          class: 'copilot-input-settings',
-          id: 'copilot-input-settings'
+          id: 'copilot-input-settings',
         }, wrapperDiv);
 
         // Add model selector
@@ -99,8 +95,6 @@ define([
           class: 'copilot-input-textarea',
           rows: 3,
           maxLength: 10000,
-          placeholder: 'Enter your text here...',
-          id: 'copilot-input-textarea'
           placeholder: 'Enter your text here...',
           id: 'copilot-input-textarea'
         });

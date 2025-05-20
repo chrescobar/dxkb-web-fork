@@ -226,7 +226,6 @@ const load_scripts = [
             var firstDiv = divs[0];
             uContainer = firstDiv;
           }
-//          console.log('in adv');
         }
 
         if (uContainer === null) {
@@ -236,7 +235,6 @@ const load_scripts = [
             var firstDiv = divs[0];
             uContainer = firstDiv;
           }
-//          console.log('in reg');
         }
 
         // If nothing else is there, we just default to the ApplicationContainer so as not to break the code
@@ -261,12 +259,12 @@ const load_scripts = [
 
       // Call the function to adjust height initially
       var timeoutId = setTimeout(function() {
+        console.log('adjusting height 1');
           adjustHeight();
-        }, 1000); //
+        }, 100); //
 
       // Using MutationObserver to watch for changes in the DOM
       var observer = new MutationObserver(function(mutations) {
-//        console.log("Mutation detected"); // Debug log to see if observer is firing
 
         // If any mutations occur, reset the timeout
         if (timeoutId) {
@@ -289,6 +287,7 @@ const load_scripts = [
         // I played around on the search results page, which is where this came into play, and 3 seconds seemed to
         // be the lowest I could go with a high enough success rate.
         let intervalId = setInterval(function() {
+          console.log('adjusting height 2');
           adjustHeight();
           loopNumber++;
           if(loopNumber > 5) {

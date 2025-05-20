@@ -185,6 +185,50 @@ define([
                 style: 'position: fixed; width: 500px; height: 600px; z-index: 9999; top: 10vh; right: 50px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); border-radius: 8px; overflow: hidden; background-color: white; display: block;'
             }, document.body);
 
+            // Add a draggable title bar to the top of the chatContainer (smallChat mode)
+            var titleBar = domConstruct.create('div', {
+                className: 'copilotChatTitleBar',
+                style: 'width: 100%; height: 36px; background: #f8f8f8; display: flex; align-items: center; justify-content: flex-start; cursor: move; position: absolute; top: 0; left: 0; z-index: 10; border-bottom: 1px solid #e0e0e0;'
+            }, this.chatContainer, 'first');
+            var titleText = domConstruct.create('div', {
+                innerHTML: 'New Chat',
+                style: 'font-weight: bold; font-size: 1.1em; margin-left: 16px; color: #333; user-select: none;'
+            }, titleBar);
+            this.chatContainer.style.paddingTop = '36px';
+
+            // Simplified drag logic for the copilotChatContainer (set left/top directly)
+            (function(container, bar) {
+                var isDragging = false;
+                var offset = { x: 0, y: 0 };
+
+                function onMouseMove(e) {
+                    if (!isDragging) return;
+                    var left = e.clientX - offset.x;
+                    var top = e.clientY - offset.y;
+                    container.style.left = left + 'px';
+                    container.style.top = top + 'px';
+                    container.style.margin = '0';
+                    container.style.position = 'fixed';
+                }
+
+                bar.addEventListener('mousedown', function(e) {
+                    isDragging = true;
+                    var rect = container.getBoundingClientRect();
+                    offset.x = e.clientX - rect.left;
+                    offset.y = e.clientY - rect.top;
+                    document.body.style.userSelect = 'none';
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+
+                function onMouseUp() {
+                    isDragging = false;
+                    document.body.style.userSelect = '';
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+            })(this.chatContainer, titleBar);
+
             // Create controller panel inside the div
             this.controllerPanel = new ChatSessionControllerPanel({
                 style: "width: 100%; height: 100%;",
@@ -346,7 +390,7 @@ define([
 
             // Create a new dialog for large view
             this.largeViewDialog = new Dialog({
-                title: "BV-BRC Copilot",
+                title: "BV-BRC Copilot Large View",
                 style: "width: " + (vw - 60) + "px; height: " + (vh - 40) + "px; left: 30px; top: 20px;",
                 closable: false,
                 onHide: lang.hitch(this, function() {
@@ -400,6 +444,41 @@ define([
                     this.chatOpen = false;
                     evt.stopPropagation();
                 }));
+            }
+
+            var DialogPane = this.largeViewDialog.domNode.querySelector('.dijitDialogPaneContent');
+            DialogPane.style.paddingLeft = '0px';
+
+            // Make the dialog draggable by its title bar
+            if (titleBar) {
+                var isDragging = false;
+                var offset = { x: 0, y: 0 };
+                titleBar.style.cursor = 'move';
+                var dialogNode = this.largeViewDialog.domNode;
+
+                titleBar.addEventListener('mousedown', function(e) {
+                    isDragging = true;
+                    var rect = dialogNode.getBoundingClientRect();
+                    offset.x = e.clientX - rect.left;
+                    offset.y = e.clientY - rect.top;
+                    document.body.style.userSelect = 'none';
+                });
+
+                document.addEventListener('mousemove', function(e) {
+                    if (isDragging) {
+                        var left = e.clientX - offset.x;
+                        var top = e.clientY - offset.y;
+                        dialogNode.style.left = left + 'px';
+                        dialogNode.style.top = top + 'px';
+                        dialogNode.style.margin = '0';
+                        dialogNode.style.position = 'fixed';
+                    }
+                });
+
+                document.addEventListener('mouseup', function() {
+                    isDragging = false;
+                    document.body.style.userSelect = '';
+                });
             }
 
             // Initialize copilotApi if it doesn't exist

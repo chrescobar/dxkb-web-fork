@@ -47,6 +47,8 @@ define([
 
     // Default message shown when no messages exist
     emptyMessage: 'No messages yet. Start a conversation!',
+    style: 'height: 100%;',
+    id: 'copilot-display-widget-container',
 
     /**
      * Constructor that initializes the widget
@@ -67,7 +69,7 @@ define([
      */
     postCreate: function() {
       this.inherited(arguments);
-
+      console.log('Creating display widgettt');
       // Create scrollable container for messages
       this.resultContainer = domConstruct.create('div', {
         class: 'copilot-result-container'
