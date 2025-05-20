@@ -50,7 +50,7 @@ define([
         // Layout configuration properties
         gutters: false,
         liveSplitters: true,
-        style: 'height: 100%; width: 100%;',
+        style: 'height: 100%; width: 100%; background-color: #ffffff; opacity: 1;',
         sessionId: null,
         design: 'sidebar',
         persist: false,
@@ -146,6 +146,9 @@ define([
             }));
             topic.subscribe('ChatRagDb', lang.hitch(this, function(ragDb) {
                 this.inputWidget.setRagDb(ragDb);
+            }));
+            topic.subscribe('ChatNumDocs', lang.hitch(this, function(numDocs) {
+                this.inputWidget.setNumDocs(numDocs);
             }));
             topic.subscribe('ChatSystemPrompt', lang.hitch(this, function(systemPrompt) {
                 this.inputWidget.setSystemPrompt(systemPrompt);
@@ -273,10 +276,10 @@ define([
         _createInputWidget: function() {
             this.inputWidget = new CopilotInput({
                 region: 'bottom',
-                splitter: false,
-                minSize: 200,
-                maxSize: 300,
-                style: 'padding: 0 10px 10px 10px; border: 0; overflow-y: auto;',
+                splitter: true,
+                minSize: 60,
+                maxSize: 400,
+                style: 'padding: 0 10px 10px 10px; border: 0; height: 20%; overflow: hidden;',
                 copilotApi: this.copilotApi,
                 chatStore: this.chatStore,
                 displayWidget: this.displayWidget,
@@ -297,6 +300,14 @@ define([
             this.inputWidget.setSessionId(sessionId);
             this.displayWidget.setSessionId(sessionId);
             this.titleWidget.setSessionId(sessionId);
+        },
+
+        /**
+         * Returns the current session ID
+         * @returns {string} The current session ID
+         */
+        getSessionId: function() {
+            return this.sessionId;
         }
     });
 });

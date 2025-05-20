@@ -23,7 +23,7 @@ define([
     'dijit/layout/ContentPane', // Basic content container
     './ChatSessionScrollBar', // Scrollable chat history widget
     './ChatSessionContainer', // Main chat session container
-    './ChatSessionOptionsBar' // Options bar widget
+    './ChatSessionOptionsBar'
   ], function (
     declare, BorderContainer, lang, Dialog, CopilotDisplay, CopilotInput, CopilotAPI, topic, ContentPane, ChatSessionScrollBar, ChatSessionContainer, ChatSessionOptionsBar
   ) {
@@ -103,6 +103,7 @@ define([
           leftContainer.addChild(chatSessionPane);
 
           this.addChild(leftContainer);
+          this.leftContainer = leftContainer;
 
           // Create main chat container in center region
           var rightContainer = new ChatSessionContainer({
@@ -112,6 +113,7 @@ define([
             id: 'chat-session-container',
           });
           this.addChild(rightContainer);
+          this.rightContainer = rightContainer;
 
         })).catch(lang.hitch(this, function(err) {
           // Show error dialog if service is unavailable

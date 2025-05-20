@@ -53,7 +53,15 @@
 #bv-brc-right-header {
   display: flex;
   gap: 0.5rem;
-  align-items: center;
+  align-items: right;
+  margin-left: auto;
+}
+
+#bv-brc-right-header {
+  display: flex;
+  gap: 0.5rem;
+  align-items: right;
+  margin-left: auto;
 }
 
 .nav-logo-link {

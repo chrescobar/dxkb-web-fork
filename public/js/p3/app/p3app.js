@@ -7,7 +7,9 @@ define([
   'dojo/ready', './app', '../router',
   'dojo/window', '../widget/Drawer', 'dijit/layout/ContentPane',
   '../jsonrpc', '../panels', '../WorkspaceManager', '../DataAPI', 'dojo/keys',
-  'dijit/ConfirmDialog', '../util/PathJoin', 'dojo/request', '../widget/WorkspaceController'
+  'dijit/ConfirmDialog', '../util/PathJoin', 'dojo/request', '../widget/WorkspaceController',
+  'p3/widget/copilot/ChatButton'
+
 ], function (
   declare,
   Topic, on, dom, domClass, domAttr, domConstruct, domQuery,
@@ -18,7 +20,7 @@ define([
   Router, Window,
   Drawer, ContentPane,
   RPC, Panels, WorkspaceManager, DataAPI, Keys,
-  ConfirmDialog, PathJoin, xhr, WorkspaceController
+  ConfirmDialog, PathJoin, xhr, WorkspaceController, ChatButton
 ) {
   return declare([App], {
     panels: Panels,
@@ -42,6 +44,15 @@ define([
           } else {
             domClass.add(document.body, 'unverified_email')
           }
+
+          // Initialize chat button
+          var chatButton = new ChatButton({
+            region: 'center',
+            width: '60px',
+            height: '60px',
+            backgroundColor: '#007bff',
+            borderRadius: '50%',
+          }).placeAt(document.body);
         })
       }
 
@@ -559,7 +570,8 @@ define([
             }
           }, false)
           // show the upload and jobs widget
-          // window.App.uploadJobsWidget('show');
+          window.App.uploadJobsWidget('show');
+          window.App.chatButtonWidget('show');
           window.App.checkSU();
           window.App.alreadyLoggedIn = true;
         } else {
@@ -723,32 +735,35 @@ define([
         console.log('loginWithVipr: not logged in yet (?)');
       }
     },
-    // uploadJobsWidget: function (action) {
-    //   if (action === 'show') {
-    //     console.log('I want to see the upload and jobs widget');
-    //     var wsc = new WorkspaceController({ region: 'bottom' });
-    //     var ac = this.getApplicationContainer();
-    //     console.log("AC", ac);
-    //     var uploadBar = ac.domNode.getElementsByClassName('WorkspaceController');
-    //     console.log("UPLOAD BAR", uploadBar);
-    //     let navBarRight = document.getElementById('bv-brc-right-header');
-    //     console.log("NAV BAR RIGHT", navBarRight);
-
-    //     // Only add the widget if it doesn't already exist
-    //     if (uploadBar.length === 0) {
-    //       // Use the widget's domNode property to get the actual DOM node
-    //       navBarRight.insertBefore(wsc.domNode, navBarRight.firstChild);
-    //       // Start the widget
-    //       wsc.startup();
-    //       console.log("ADDED WSC", wsc);
-
-    //       let jobsStatusPopup = ac.domNode.getElementsByClassName('JobStatusButton');
-    //       console.log("JOBS STATUS POPUP", jobsStatusPopup);
-    //     }
-    //   } else {
-    //     console.log('I should not see the upload and jobs widget');
-    //   }
-    // },
+    uploadJobsWidget: function (action) {
+      if (action === 'show') {
+        // console.log('I want to see the upload and jobs widget');
+        var wsc = new WorkspaceController({ region: 'bottom' });
+        var ac = this.getApplicationContainer();
+        // console.log(ac);
+        var uploadBar = ac.domNode.getElementsByClassName('WorkspaceController');
+        if (uploadBar.length === 0) {
+          ac.addChild(wsc);
+        }
+      } else {
+        console.log('I should not see the upload and jobs widget');
+      }
+    },
+    chatButtonWidget: function (action) {
+      if (action === 'show') {
+        var chatButton = new ChatButton({
+          region: 'center',
+          width: '60px',
+          height: '60px',
+          backgroundColor: '#007bff',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+        });
+      } else {
+        console.log('I should not see the chat button');
+      }
+    },
     refreshUser: function () {
       return xhr.get(this.userServiceURL + '/user/' + window.localStorage.userid, {
         headers: {

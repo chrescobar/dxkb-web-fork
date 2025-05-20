@@ -39,6 +39,12 @@ define([
       /** Selected RAG database for enhanced responses */
       ragDb: null,
 
+      /** Number of documents to use for RAG queries */
+      numDocs: 3,
+
+      /** Flag indicating whether to summarize documents in RAG queries */
+      summarizeDocs: true,
+
       /**
        * Constructor that initializes the widget with provided options
        * Uses safeMixin to safely merge configuration arguments
@@ -59,14 +65,24 @@ define([
       postCreate: function() {
         this.inherited(arguments);
 
+        // Subscribe to summarize documents changes
+        topic.subscribe('ChatSummarizeDocs', lang.hitch(this, function(shouldSummarize) {
+          this.summarizeDocs = shouldSummarize;
+        }));
+
         // Create centered wrapper div
         var wrapperDiv = domConstruct.create('div', {
+          class: 'copilot-input-wrapper',
+          id: 'copilot-input-wrapper',
+          style: 'height: 95%;'
           class: 'copilot-input-wrapper',
           id: 'copilot-input-wrapper'
         }, this.containerNode);
 
         // Create settings panel
         var settingsDiv = domConstruct.create('div', {
+          class: 'copilot-input-settings',
+          id: 'copilot-input-settings'
           class: 'copilot-input-settings',
           id: 'copilot-input-settings'
         }, wrapperDiv);
@@ -80,8 +96,11 @@ define([
         // Create expandable textarea
         this.textArea = new Textarea({
           class: 'copilot-input-textarea',
+          class: 'copilot-input-textarea',
           rows: 3,
           maxLength: 10000,
+          placeholder: 'Enter your text here...',
+          id: 'copilot-input-textarea'
           placeholder: 'Enter your text here...',
           id: 'copilot-input-textarea'
         });
@@ -149,7 +168,7 @@ define([
             evt.target.style.color = '';
           },
           onclick: lang.hitch(this, function() {
-            topic.publish('ragButtonPressed');
+            topic.publish('modelButtonPressed');
           })
         }, currDiv);
       },
@@ -202,17 +221,15 @@ define([
 
         this.displayWidget.showLoadingIndicator(this.chatStore.query());
 
-        this.copilotApi.submitRagQuery(inputText, this.ragDb, this.sessionId, this.model).then(lang.hitch(this, function(response) {
+        this.copilotApi.submitRagQuery(inputText, this.ragDb, this.numDocs, this.sessionId, this.model, this.summarizeDocs).then(lang.hitch(this, function(response) {
           var system_prompt = 'Using the following documents as context, answer the user questions. Do not use any other sources of information:\n\n';
           if (this.systemPrompt && this.systemPrompt.length > 1) {
             system_prompt = this.systemPrompt + '\n\n' + system_prompt;
           }
-          response['documents'][0].forEach(function(doc) {
+          response['documents'].forEach(function(doc) {
             system_prompt += doc + '\n';
           });
-
           this.copilotApi.submitQuery(inputText, this.sessionId, system_prompt, this.model).then(lang.hitch(this, function(llm_response) {
-
             this.chatStore.addMessages([
               {
                 role: 'user',
@@ -235,6 +252,12 @@ define([
               topic.publish('reloadUserSessions');
               topic.publish('generateSessionTitle');
             }
+          })).catch(function(error) {
+            topic.publish('CopilotApiError', { error: error });
+          }).finally(lang.hitch(this, function() {
+            this.displayWidget.hideLoadingIndicator();
+            this.isSubmitting = false;
+            this.submitButton.set('disabled', false);
           }));
         })).finally(lang.hitch(this, function() {
           this.displayWidget.hideLoadingIndicator();
@@ -284,7 +307,9 @@ define([
             topic.publish('reloadUserSessions');
             topic.publish('generateSessionTitle');
           }
-        })).finally(lang.hitch(this, function() {
+        })).catch(function(error) {
+          topic.publish('CopilotApiError', { error: error });
+        }).finally(lang.hitch(this, function() {
           this.displayWidget.hideLoadingIndicator();
           this.isSubmitting = false;
           this.submitButton.set('disabled', false);
@@ -385,6 +410,13 @@ define([
         } else {
           this.modelText.innerHTML = 'Model: None';
         }
+      },
+
+      /**
+       * Updates the number of documents to use for RAG queries
+       */
+      setNumDocs: function(numDocs) {
+        this.numDocs = numDocs;
       }
     });
   });

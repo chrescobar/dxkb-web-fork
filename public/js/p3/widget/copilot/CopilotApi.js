@@ -28,6 +28,7 @@ define([
      * Provides methods for chat sessions, queries, and message management.
      */
     return declare([_WidgetBase], {
+
         /** Base URL for main Copilot API endpoints */
         apiUrlBase: 'https://dev-3.bv-brc.org/copilot-api/chatbrc',
 
@@ -64,6 +65,7 @@ define([
          * - Returns empty array if no sessions found
          */
         getUserSessions: function() {
+            if (!this._loggedIn) return Promise.reject('Not logged in');
             var _self = this;
             console.log('getUserSessions', _self.user_id);
             return request.get(this.apiUrlBase + `/get-all-sessions?user_id=${encodeURIComponent(_self.user_id)}`, {
@@ -88,6 +90,7 @@ define([
          * - Publishes error events on failure
          */
         getNewSessionId: function() {
+            if (!this._loggedIn) return Promise.reject('Not logged in');
             return request.get(this.apiUrlBase + '/start-chat', {
                 headers: {
                     Authorization: (window.App.authorizationToken || '')
@@ -105,6 +108,25 @@ define([
         },
 
         /**
+         * Checks if the user is logged in
+         * Returns false if not logged in and shows dialog
+         * Returns true if logged in
+         */
+        _checkLoggedIn: function() {
+            if (!window.App || !window.App.authorizationToken) {
+                new Dialog({
+                    title: "Not Logged In",
+                    content: "You must be logged in to use the Copilot chat.",
+                    style: "width: 300px"
+                }).show();
+                this._loggedIn = false;
+                return false;
+            }
+            this._loggedIn = true;
+            return true;
+        },
+
+        /**
          * Submits a regular chat query
          * Implementation:
          * - Builds query data object with text, model, session
@@ -113,14 +135,16 @@ define([
          * - Caches response in storedResult
          * - Handles errors with detailed logging
          */
-        submitQuery: function(inputText, sessionId, systemPrompt, model) {
+        submitQuery: function(inputText, sessionId, systemPrompt, model, save_chat = true) {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
             var _self = this;
             console.log('query');
             var data = {
                 query: inputText,
                 model: model,
                 session_id: sessionId,
-                user_id: _self.user_id
+                user_id: _self.user_id,
+                save_chat: save_chat
             };
 
             if (systemPrompt) {
@@ -151,13 +175,16 @@ define([
          * - Validates success message in response
          * - Throws error if response indicates failure
          */
-        submitRagQuery: function(inputQuery, ragDb, sessionId, model) {
+        submitRagQuery: function(inputQuery, ragDb, numDocs, sessionId, model, summarizeDocs) {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
             var _self = this;
+
             var data = {
                 query: inputQuery,
                 rag_db: ragDb,
                 user_id: _self.user_id,
-                model: model
+                model: model,
+                num_docs: numDocs
             };
             return request.post(this.apiUrlBase + '/rag', {
                 data: JSON.stringify(data),
@@ -169,11 +196,98 @@ define([
             }).then(lang.hitch(this, function(response) {
                 _self.storedResult = response;
                 if (response['message'] == 'success') {
+                    // If summarizeDocs is true and we have documents to summarize
+                    if (summarizeDocs && response.documents && response.documents.length > 0) {
+                        // Create an array of promises for each document summarization
+                        var summarizationPromises = response.documents.map(lang.hitch(this, function(doc) {
+                            // Create a prompt for summarizing the document
+                            var summaryPrompt = `Please summarize the following document in the context of this query: "${inputQuery}"\n\nDocument:\n${doc}`;
+                            // Call submitQuery for each document with save_chat=false to prevent saving to history
+                            return this.submitQueryChatOnly(summaryPrompt, '', model)
+                                .then(lang.hitch(this, function(summaryResponse) {
+                                    // Only store the summary in the document, don't add to chat history
+                                    doc.summary = summaryResponse.response;
+                                    return doc;
+                                }));
+                        }));
+
+                        // Wait for all summarizations to complete
+                        return Promise.all(summarizationPromises)
+                            .then(lang.hitch(this, function(summarizedDocs) {
+                                // Update the response with summarized documents
+                                response.documents = summarizedDocs;
+                                return response;
+                            }));
+                    }
                     return response;
                 } else {
                     throw new Error(response['message']);
                 }
             })).catch(function(error) {
+                console.error('Error submitting query:', error);
+                throw error;
+            });
+        },
+
+        /**
+         * Submits a regular chat query
+         * Implementation:
+         * - Builds query data object with text, model, session
+         * - Optionally includes system prompt if provided
+         * - Makes POST request to chat endpoint
+         * - Caches response in storedResult
+         * - Handles errors with detailed logging
+         */
+        submitQueryChatOnly: function(inputText, systemPrompt, model) {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
+            var _self = this;
+            console.log('query');
+            var data = {
+                query: inputText,
+                model: model,
+                user_id: _self.user_id,
+            };
+
+            if (systemPrompt) {
+                data.system_prompt = systemPrompt;
+            }
+
+            return request.post(this.apiUrlBase + '/chat-only', {
+                data: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: (window.App.authorizationToken || '')
+                },
+                handleAs: 'json'
+            }).then(function(response) {
+                return response.response;
+            }).catch(function(error) {
+                console.error('Error submitting query:', error);
+                throw error;
+            });
+        },
+
+        submitQueryWithImage: function(inputText, sessionId, systemPrompt, model, image) {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
+            var _self = this;
+            console.log('query');
+            var data = {
+                query: inputText,
+                model: model,
+                session_id: sessionId,
+                user_id: _self.user_id,
+                image: image
+            };
+            return request.post(this.apiUrlBase + '/chat-image', {
+                data: JSON.stringify(data),
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: (window.App.authorizationToken || '')
+                },
+                handleAs: 'json'
+            }).then(function(response) {
+                return response.response;
+            }).catch(function(error) {
                 console.error('Error submitting query:', error);
                 throw error;
             });
@@ -187,6 +301,7 @@ define([
          * - Includes detailed error logging
          */
         getSessionMessages: function(sessionId) {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
             var _self = this;
             return request.get(this.apiUrlBase + `/get-session-messages?session_id=${encodeURIComponent(sessionId)}`, {
                 headers: {
@@ -203,6 +318,29 @@ define([
         },
 
         /**
+         * Retrieves the title for a session
+         * Implementation:
+         * - Makes GET request with session ID
+         * - Returns session title
+         * - Includes detailed error logging
+         */
+        getSessionTitle: function(sessionId) {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
+            var _self = this;
+            return request.get(this.apiUrlBase + `/get-session-title?session_id=${encodeURIComponent(sessionId)}`, {
+                headers: {
+                    Authorization: (window.App.authorizationToken || '')
+                },
+                handleAs: 'json'
+            }).then(function(response) {
+                return response;
+            }).catch(function(error) {
+                console.error('Error getting session title:', error);
+                throw error;
+            });
+        },
+
+        /**
          * Generates a title from chat messages
          * Implementation:
          * - Posts messages to title generation endpoint
@@ -210,6 +348,7 @@ define([
          * - Returns generated title string
          */
         generateTitleFromMessages: function(messages, model) {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
             var _self = this;
             return request.post(this.apiUrlBase + '/generate-title-from-messages', {
                 data: JSON.stringify({
@@ -239,6 +378,7 @@ define([
          * - Returns updated session data
          */
         updateSessionTitle: function(sessionId, newTitle) {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
             var _self = this;
             return request.post(this.apiUrlBase + '/update-session-title', {
                 data: JSON.stringify({
@@ -267,6 +407,7 @@ define([
          * - Returns first prompt in array
          */
         getUserPrompts: function() {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
             var _self = this;
             return request.get(this.apiUrlBase + '/get-user-prompts?user_id=' + _self.user_id, {
                 headers: {
@@ -289,6 +430,7 @@ define([
          * - Publishes general errors to topic
          */
         savePrompt: function(promptName, promptText) {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
             var _self = this;
             return request.post(this.apiUrlBase + '/save-prompt', {
                 data: JSON.stringify({
@@ -305,7 +447,7 @@ define([
                 console.log('Prompt saved:', response);
                 return true;
             }).catch(function(error) {
-                if (error.response.status === 413) {
+                if (error.response && error.response.status === 413) {
                     new Dialog({
                         title: "Error",
                         content: "Prompt too long, please shorten it.",
@@ -327,6 +469,7 @@ define([
          * - Throws error on failure
          */
         deleteSession: function(sessionId) {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
             var _self = this;
             return request.post(this.apiUrlBase + '/delete-session', {
                 data: JSON.stringify({
@@ -355,6 +498,7 @@ define([
          * - Uses test project ID currently
          */
         getModelList: function() {
+            if (!this._checkLoggedIn()) return Promise.reject('Not logged in');
             var _self = this;
             return request.post(this.dbUrlBase + '/get-model-list', {
                 data: JSON.stringify({
