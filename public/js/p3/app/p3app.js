@@ -46,13 +46,15 @@ define([
           }
 
           // Initialize chat button
-          var chatButton = new ChatButton({
-            region: 'center',
-            width: '60px',
-            height: '60px',
-            backgroundColor: '#007bff',
-            borderRadius: '50%',
-          }).placeAt(document.body);
+          if (!document.body.querySelector('.ChatButton')) {
+            var chatButton = new ChatButton({
+              region: 'center',
+              width: '60px',
+              height: '60px',
+              backgroundColor: '#007bff',
+              borderRadius: '50%',
+            }).placeAt(document.body);
+          }
         })
       }
 
@@ -751,11 +753,11 @@ define([
     },
     chatButtonWidget: function (action) {
       if (action === 'show') {
-        var chatButton = new ChatButton({
+       var chatButton = new ChatButton({
           region: 'center',
           width: '60px',
           height: '60px',
-          backgroundColor: '#007bff',
+          backgroundColor: '#444444',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',

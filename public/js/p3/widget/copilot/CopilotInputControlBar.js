@@ -86,7 +86,7 @@ define([
 
             // Configure textarea with auto-expansion and styling
             this.textArea = new Textarea({
-                style: 'width: 60%; min-height: 40px; max-height: 100%; resize: none; overflow-y: hidden; border-radius: 5px; margin-right: 10px;',
+                style: 'width: 75%; min-height: 80px; max-height: 80px; resize: none; overflow-y: scroll; border-radius: 5px; margin-right: 10px;',
                 rows: 3, // Default visible rows
                 maxLength: 10000,
                 placeholder: 'Enter your text here...'

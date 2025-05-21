@@ -68,8 +68,9 @@ define([
      * - Subscribes to message refresh and error topics
      */
     postCreate: function() {
+      console.log('CopilotDisplay postCreate');
       this.inherited(arguments);
-      console.log('Creating display widgettt');
+
       // Create scrollable container for messages
       this.resultContainer = domConstruct.create('div', {
         class: 'copilot-result-container'
@@ -111,7 +112,7 @@ define([
     showMessages: function(messages) {
       if (messages.length) {
         domConstruct.empty(this.resultContainer);
-        console.log('show messages', messages);
+        // console.log('show messages', messages);
 
         messages.forEach(lang.hitch(this, function(message) {
           new ChatMessage(message, this.resultContainer);

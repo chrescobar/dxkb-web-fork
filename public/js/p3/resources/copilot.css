@@ -82,7 +82,6 @@
   overflow-y: auto; /* Vertical scroll only */
   overflow-x: hidden; /* Prevent horizontal scroll */
   padding: 10px;
-  padding-right: 100px;
   border: 0;
   margin: 0 auto;
   background-color: #ffffff;
@@ -93,7 +92,6 @@
 
 .copilot-empty-state {
   color: #666;
-  padding: 10px;
   text-align: center;
   height: 100%;
 }
@@ -106,13 +104,13 @@
 .copilot-input-wrapper {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end; /* Aligns items to bottom */
+  align-items: flex-end;
   width: 100%;
-  min-height: 40px; /* Minimum height to match textarea */
+  min-height: 80px;
   border: 0;
   position: relative;
-  height: auto;
-  overflow-y: auto;
+  height: 80px;
+  overflow: auto;
   padding-top: 10px;
 }
 
@@ -128,12 +126,13 @@
 
 .copilot-input-textarea {
   width: 60%;
-  min-height: 100px;
-  max-height: 200px;
+  min-height: 80px;
+  max-height: 80px; /* Match wrapper height */
   border-radius: 5px;
   margin-right: 10px;
   margin-bottom: 2px;
   resize: none;
+  overflow-y: auto !important;
 }
 
 /* Button Element Styles */
@@ -281,7 +280,9 @@
 
 .copilotChatMinimizeButton,
 .copilotChatCloseButton,
-.copilotChatExpandButton {
+.copilotChatNewChatButton,
+.copilotChatExpandButton,
+.copilotChatShrinkButton {
   opacity: 0.7;
   transition: all 0.2s ease;
   display: flex;
@@ -297,7 +298,9 @@
 
 .copilotChatMinimizeButton:hover,
 .copilotChatCloseButton:hover,
-.copilotChatExpandButton:hover {
+.copilotChatNewChatButton:hover,
+.copilotChatExpandButton:hover,
+.copilotChatShrinkButton:hover {
   opacity: 1;
   transform: scale(1.1);
   background-color: #f0f0f0 !important;
@@ -368,5 +371,4 @@
 
 #copilot-display-widget-container {
   height: 100%;
-  mac
 }

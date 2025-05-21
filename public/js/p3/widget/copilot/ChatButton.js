@@ -35,7 +35,18 @@ define([
     CopilotGridContainer,
     require
 ) {
-    return declare([Button], {
+    // Static instance variable at module scope
+    var instance = null;
+
+    // Static getInstance function at module scope
+    function getInstance(opts) {
+        if (!instance) {
+            instance = new ChatButton(opts);
+        }
+        return instance;
+    }
+
+    var ChatButton = declare([Button], {
         // Base class for styling
         baseClass: 'ChatButton',
 
@@ -65,28 +76,122 @@ define([
 
         // Constructor
         constructor: function(opts) {
+            // If an instance already exists, return it
+            if (instance) {
+                return instance;
+            }
             // Add any initialization logic here
             lang.mixin(this, opts);
+            instance = this;
         },
 
         // Post-create lifecycle method
         postCreate: function() {
+            // Hide or destroy if not logged in
+            if (!window.App || !window.App.user || !window.App.user.id) {
+                if (this.destroy) {
+                    this.destroy();
+                } else {
+                    this.domNode.style.display = 'none';
+                }
+                return;
+            }
+
             this.inherited(arguments);
+
+            // Hide the button if on /view/Copilot page
+            if (window.location && window.location.pathname && window.location.pathname.indexOf('/view/Copilot') === 0) {
+                this.domNode.style.display = 'none';
+                return;
+            }
 
             // Set the button icon
             this.set('label', '<i class="fa fa-comments"></i>');
             domClass.add(this.domNode, 'ChatButton');
 
+            // Make the button draggable
+            this._makeButtonDraggable();
+        },
 
-            /*
-            // Create the options dialog
-            this._createOptionsDialog();
+        _makeButtonDraggable: function() {
+            var button = this.domNode;
+            button.style.position = 'fixed';
+            button.style.zIndex = 10000;
+            if (!button.style.left) button.style.left = '10px';
+            if (!button.style.top) button.style.top = '70%';
 
-            // Close the tooltip when clicking elsewhere
-            on(document, 'click', lang.hitch(this, function() {
-                popup.close(this.optionsDialog);
-            }));
-            */
+            var saved = localStorage.getItem('copilotButtonPos');
+            if (saved) {
+                var pos = JSON.parse(saved);
+                button.style.left = pos.left;
+                button.style.top = pos.top;
+            }
+
+            let isDragging = false, offset = {x:0, y:0};
+
+            // Helper to update chat position if open
+            this._updateMiniChatPosition = () => {
+                if (!this.chatContainer) return;
+                var buttonRect = button.getBoundingClientRect();
+                var chatWidth = 500;
+                var chatHeight = 600;
+                var offsetVal = 45;
+                var showBelow = buttonRect.top < window.innerHeight / 2;
+                var top, left;
+                if (showBelow) {
+                    top = buttonRect.bottom + offsetVal;
+                    if (top + chatHeight > window.innerHeight) top = window.innerHeight - chatHeight - 10;
+                } else {
+                    top = buttonRect.top - chatHeight - offsetVal;
+                    if (top < 10) top = 10;
+                }
+                if (buttonRect.left < window.innerWidth / 2) {
+                    left = 10;
+                } else {
+                    left = window.innerWidth - chatWidth - 10;
+                }
+                this.chatContainer.style.top = top + 'px';
+                this.chatContainer.style.left = left + 'px';
+            };
+
+            button.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                offset.x = e.clientX - button.getBoundingClientRect().left;
+                offset.y = e.clientY - button.getBoundingClientRect().top;
+                document.body.style.userSelect = 'none';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                let left = e.clientX - offset.x;
+                let top = e.clientY - offset.y;
+                left = Math.max(0, Math.min(left, window.innerWidth - button.offsetWidth));
+                top = Math.max(0, Math.min(top, window.innerHeight - button.offsetHeight));
+                button.style.left = left + 'px';
+                button.style.top = top + 'px';
+                // Update chat position if open
+                this._updateMiniChatPosition();
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (!isDragging) return;
+                isDragging = false;
+                document.body.style.userSelect = '';
+                let left = parseInt(button.style.left, 10);
+                let snapLeft = 10, snapRight = window.innerWidth - button.offsetWidth - 10;
+                if (left < window.innerWidth / 2) {
+                    button.style.left = snapLeft + 'px';
+                } else {
+                    button.style.left = snapRight + 'px';
+                }
+                // Save position
+                localStorage.setItem('copilotButtonPos', JSON.stringify({
+                    left: button.style.left,
+                    top: button.style.top
+                }));
+                // Update chat position if open
+                this._updateMiniChatPosition();
+            });
         },
 
         _createOptionsDialog: function() {
@@ -179,20 +284,50 @@ define([
         },
 
         _createControllerPanel: function() {
+            // Get the position of the floating button (this.domNode)
+            var buttonRect = this.domNode.getBoundingClientRect();
+            var chatWidth = 500;
+            var chatHeight = 600;
+            var offset = 10; // pixels between button and chat
+
+            // Determine if button is near top or bottom
+            var showBelow = buttonRect.top < window.innerHeight / 2;
+
+            var top, left;
+            if (showBelow) {
+                top = buttonRect.bottom + offset;
+                if (top + chatHeight > window.innerHeight) top = window.innerHeight - chatHeight - 10;
+            } else {
+                top = buttonRect.top - chatHeight - offset;
+                if (top < 10) top = 10;
+            }
+
+            // Snap chat to left or right depending on button position
+            if (buttonRect.left < window.innerWidth / 2) {
+                left = 30; // Snap to left edge
+            } else {
+                left = window.innerWidth - chatWidth - 30; // Snap to right edge
+            }
+
             // Create a container div for the chat panel
             this.chatContainer = domConstruct.create('div', {
                 className: 'copilotChatContainer',
-                style: 'position: fixed; width: 500px; height: 600px; z-index: 9999; top: 10vh; right: 50px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); border-radius: 8px; overflow: hidden; background-color: white; display: block;'
+                style: `position: fixed; width: ${chatWidth}px; height: ${chatHeight}px; z-index: 9999; top: ${top}px; left: ${left}px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); border-radius: 8px; overflow: hidden; background-color: white; display: block;`
             }, document.body);
+
+            // After chat is created, update its position in case button moved
+            if (this._updateMiniChatPosition) {
+                setTimeout(() => { this._updateMiniChatPosition(); }, 0);
+            }
 
             // Add a draggable title bar to the top of the chatContainer (smallChat mode)
             var titleBar = domConstruct.create('div', {
                 className: 'copilotChatTitleBar',
-                style: 'width: 100%; height: 36px; background: #f8f8f8; display: flex; align-items: center; justify-content: flex-start; cursor: move; position: absolute; top: 0; left: 0; z-index: 10; border-bottom: 1px solid #e0e0e0;'
+                style: 'width: 100%; height: 36px; background: #C7DCFD; display: flex; align-items: center; justify-content: flex-start; cursor: move; position: absolute; top: 0; left: 0; z-index: 10; border-bottom: 1px solid #e0e0e0;'
             }, this.chatContainer, 'first');
             var titleText = domConstruct.create('div', {
-                innerHTML: 'New Chat',
-                style: 'font-weight: bold; font-size: 1.1em; margin-left: 16px; color: #333; user-select: none;'
+                innerHTML: 'Copilot Mini Chat',
+                style: 'font-weight: bold; font-size: 1.1em; margin-left: 12px; color: #333; user-select: none;'
             }, titleBar);
             this.chatContainer.style.paddingTop = '36px';
 
@@ -205,6 +340,13 @@ define([
                     if (!isDragging) return;
                     var left = e.clientX - offset.x;
                     var top = e.clientY - offset.y;
+
+                    // Clamp left and top so the window stays on screen
+                    var maxLeft = window.innerWidth - container.offsetWidth;
+                    var maxTop = window.innerHeight - container.offsetHeight;
+                    left = Math.max(0, Math.min(left, maxLeft));
+                    top = Math.max(0, Math.min(top, maxTop));
+
                     container.style.left = left + 'px';
                     container.style.top = top + 'px';
                     container.style.margin = '0';
@@ -274,34 +416,38 @@ define([
                 this.currentSessionId = this.controllerPanel.getSessionId();
             }), 100);
 
-            // Add control buttons container
+            // Add control buttons container to the right side of the title bar
             var buttonsContainer = domConstruct.create('div', {
                 className: 'copilotChatButtonsContainer',
-                style: 'position: absolute; top: 5px; right: 5px; z-index: 10000; display: flex;'
-            }, this.chatContainer);
+                style: 'display: flex; align-items: center; justify-content: flex-end; height: 100%; margin-left: auto; margin-right: 8px; gap: 8px;'
+            }, titleBar);
 
-            // Add expand button
+            // Common style for all buttons
+            var buttonStyle = 'width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; background-color: #e3eefd; border: none; border-radius: 50%; font-size: 18px; color: #333; transition: background 0.2s;';
+
+            // Add new chat button
+            var newChatButton = domConstruct.create('div', {
+                className: 'copilotChatNewChatButton',
+                style: buttonStyle,
+                innerHTML: '+',
+                title: 'New Chat (start a new session)'
+            }, buttonsContainer);
+
+            // Expand button
             var expandButton = domConstruct.create('div', {
                 className: 'copilotChatExpandButton',
-                style: 'width: 20px; height: 20px; cursor: pointer; text-align: center; line-height: 20px; background-color: #f8f8f8; border-radius: 50%; margin-right: 8px;',
-                innerHTML: '↗︎',
+                style: buttonStyle,
+                innerHTML: '<img src="/patric/images/expand.svg" style="width: 20px; height: 20px;" />',
                 title: 'Expand to large view'
             }, buttonsContainer);
 
-            // Add minimize button
-            var minimizeButton = domConstruct.create('div', {
-                className: 'copilotChatMinimizeButton',
-                style: 'width: 20px; height: 20px; cursor: pointer; text-align: center; line-height: 20px; background-color: #f8f8f8; border-radius: 50%; margin-right: 8px;',
-                innerHTML: '_',
-                title: 'Minimize (keep session)'
-            }, buttonsContainer);
 
-            // Add close button
+            // Close button
             var closeButton = domConstruct.create('div', {
                 className: 'copilotChatCloseButton',
-                style: 'width: 24px; height: 24px; cursor: pointer; text-align: center; line-height: 20px; background-color: #f8f8f8; border-radius: 50%;',
-                innerHTML: '+',
-                title: 'New Chat (start a new session)'
+                style: buttonStyle,
+                innerHTML: '✕',
+                title: 'Close chat'
             }, buttonsContainer);
 
             // Expand button click handler - open large chat and hide small chat
@@ -312,15 +458,8 @@ define([
                 evt.stopPropagation();
             }));
 
-            // Minimize button click handler - just hide the panel
-            on(minimizeButton, 'click', lang.hitch(this, function(evt) {
-                this._hideControllerPanel();
-                this.chatOpen = false;
-                evt.stopPropagation();
-            }));
-
             // Close button click handler - hide panel and reset session
-            on(closeButton, 'click', lang.hitch(this, function(evt) {
+            on(newChatButton, 'click', lang.hitch(this, function(evt) {
                 // Create a new chat session immediately
                 if (this.copilotApi) {
                     this.copilotApi.getNewSessionId().then(lang.hitch(this, function(sessionId) {
@@ -343,6 +482,13 @@ define([
                         }
                     }));
                 }
+                evt.stopPropagation();
+            }));
+
+            // Minimize button click handler - just hide the panel
+            on(closeButton, 'click', lang.hitch(this, function(evt) {
+                this._hideControllerPanel();
+                this.chatOpen = false;
                 evt.stopPropagation();
             }));
         },
@@ -390,7 +536,7 @@ define([
 
             // Create a new dialog for large view
             this.largeViewDialog = new Dialog({
-                title: "BV-BRC Copilot Large View",
+                // title: "BV-BRC Copilot Large Chat",
                 style: "width: " + (vw - 60) + "px; height: " + (vh - 40) + "px; left: 30px; top: 20px;",
                 closable: false,
                 onHide: lang.hitch(this, function() {
@@ -409,23 +555,56 @@ define([
             });
             this.largeViewDialog.set('content', containerNode);
 
-            // Add shrink button to the dialog's title bar
+            // Update the title bar style for proper flex layout
             var titleBar = this.largeViewDialog.domNode.querySelector('.dijitDialogTitleBar');
             if (titleBar) {
-                var shrinkButton = domConstruct.create('div', {
-                    className: 'copilotChatShrinkButton',
-                    style: 'width: 20px; height: 20px; cursor: pointer; text-align: center; line-height: 20px; background-color: #f8f8f8; border-radius: 10%; margin-right: 8px; position: absolute; right: 30px; top: 8px;',
-                    innerHTML: '↘︎',
-                    title: 'Switch to small chat view'
+                titleBar.style.display = 'flex';
+                titleBar.style.alignItems = 'center';
+                titleBar.style.position = 'relative';
+                titleBar.style.width = '100%';
+                titleBar.style.height = '36px';
+                titleBar.style.background = '#C7DCFD';
+
+                // Update or create the title text node
+                var titleText = titleBar.querySelector('.copilotChatTitleText');
+                if (!titleText) {
+                    titleText = domConstruct.create('div', {
+                        className: 'copilotChatTitleText',
+                        innerHTML: 'Copilot Large Chat',
+                        style: 'font-weight: bold; font-size: 1.1em; margin-left: 12px; color: #333; user-select: none; flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;'
+                    }, titleBar, 'first');
+                } else {
+                    titleText.style.flex = '1 1 auto';
+                    titleText.style.minWidth = '0';
+                    titleText.style.whiteSpace = 'nowrap';
+                    titleText.style.overflow = 'hidden';
+                    titleText.style.textOverflow = 'ellipsis';
+                }
+
+                // Create a flex container for the buttons
+                var buttonsContainer = domConstruct.create('div', {
+                    className: 'copilotChatButtonsContainer',
+                    style: 'display: flex; align-items: center; justify-content: flex-end; height: 100%; flex: 0 0 auto; gap: 8px;'
                 }, titleBar);
 
-                // Add close button
+                // Common style for all buttons
+                var buttonStyle = 'width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; background-color: #e3eefd; border: none; border-radius: 50%; font-size: 18px; color: #333; transition: background 0.2s;';
+
+                // Shrink button (↖)
+                var shrinkButton = domConstruct.create('div', {
+                    className: 'copilotChatShrinkButton',
+                    style: buttonStyle,
+                    innerHTML: '<img src="/patric/images/shrink.svg" style="width: 20px; height: 20px;" />',
+                    title: 'Shrink to mini view'
+                }, buttonsContainer);
+
+                // Close button (✕)
                 var closeButton = domConstruct.create('div', {
                     className: 'copilotChatCloseButton',
-                    style: 'width: 20px; height: 20px; cursor: pointer; text-align: center; line-height: 20px; background-color: #f8f8f8; border-radius: 10%; position: absolute; right: 8px; top: 8px;',
-                    innerHTML: '_',
-                    title: 'Minimize chat'
-                }, titleBar);
+                    style: buttonStyle,
+                    innerHTML: '✕',
+                    title: 'Close chat'
+                }, buttonsContainer);
 
                 // Shrink button click handler - close large chat and open small chat
                 on(shrinkButton, 'click', lang.hitch(this, function(evt) {
@@ -627,4 +806,6 @@ define([
             domClass.toggle(this.domNode, 'active', isOpen);
         }
     });
+
+    return ChatButton;
 });
