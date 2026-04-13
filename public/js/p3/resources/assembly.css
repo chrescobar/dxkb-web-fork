@@ -16,6 +16,15 @@
 
 .appSubmissionArea {
     margin-bottom: 20px;
+    position: sticky;
+    bottom: 0;
+    background-color: inherit;
+    z-index: 1;
+}
+
+.PanelForm {
+    bottom: 0 !important;
+    height: auto !important;
 }
 
 .helpModal {

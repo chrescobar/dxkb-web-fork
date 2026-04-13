@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"\\\\.\\(js|ts\\)$\")",
+      "Bash(grep -rn \"/public\\\\|isPublic\\\\|public.*workspace\" /Users/chrescobar/Documents/Code/dxkb-web-fork/public/js/p3/widget/*.js)",
+      "Bash(grep -rn \"Router.register\\\\|/workspace\\\\|/public\" /Users/chrescobar/Documents/Code/dxkb-web-fork/public/js/p3/*.js)",
+      "Bash(grep -rn global_permission /Users/chrescobar/Documents/Code/dxkb-web-fork/public/js/p3 --include=*.js)",
+      "Bash(gh api:*)",
+      "mcp__plugin_playwright_playwright__browser_navigate",
+      "mcp__plugin_playwright_playwright__browser_take_screenshot",
+      "mcp__plugin_playwright_playwright__browser_console_messages",
+      "mcp__plugin_playwright_playwright__browser_evaluate",
+      "mcp__plugin_playwright_playwright__browser_network_requests",
+      "mcp__plugin_playwright_playwright__browser_snapshot",
+      "mcp__plugin_playwright_playwright__browser_click",
+      "mcp__plugin_playwright_playwright__browser_type",
+      "Bash(find:*)"
+    ]
+  }
+}

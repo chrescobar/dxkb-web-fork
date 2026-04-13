@@ -4,12 +4,15 @@
         <title>Disease X Knowledge Base | DXKB</title>
 		<%- include('header') %>
 	</head>
-	<body class="claro patric <% if (request.isAuthenticated && request.isAuthenticated()) { %>Authenticated<% } %>">
-		<div id="ApplicationContainer" data-dojo-type="dijit/layout/BorderContainer" class="layoutContainer" data-dojo-props="id:'ApplicationContainer',gutters:false,liveSplitters:false">
+	<body class="claro patric <% if (request.isAuthenticated && request.isAuthenticated()) { %>Authenticated<% } %>" style="display:flex;flex-direction:column;height:100vh;overflow:hidden;">
+		<div id="ApplicationContainer" data-dojo-type="dijit/layout/BorderContainer" class="layoutContainer" data-dojo-props="id:'ApplicationContainer',gutters:false,liveSplitters:false" style="flex:1;min-height:0;">
 			<%- include('bv-brc-header') %>
 			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'" style="padding:0px;border:0px solid #ddd;background:inherit;">
                 <%- include('home') %>
             </div>
+		</div>
+		<div style="flex-shrink:0;">
+			<%- include('bv-brc-footer') %>
 		</div>
 		<%- include('javascript') %>
 	</body>

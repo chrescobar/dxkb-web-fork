@@ -27,28 +27,42 @@
       </p>
     </div>
 
-    <div id="foldingTypeBox" style="width:400px;" class="appBox appShadow">
+    <!-- Tool Selection -->
+    <div class="appBox appShadow">
       <div class="headerrow">
-        <label class="appBoxLabel">Folding Type:</label>
+        <label class="appBoxLabel">Tool:</label>
         <div name="folding-type" class="infobox iconbox infobutton dialoginfo">
           <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
         </div>
       </div>
       <div class="appRow">
-        <input type="radio" data-dojo-type="dijit/form/RadioButton" data-dojo-attach-point="foldingTypeAlphaFold"
-          name="foldingType" value="alphafold" checked data-dojo-attach-event="onChange:onFoldingTypeChange" />
-        <label for="radio1">AlphaFold</label>
+        <input type="radio" data-dojo-type="dijit/form/RadioButton" data-dojo-attach-point="toolAuto" name="tool"
+          value="auto" checked data-dojo-attach-event="onChange:onToolChange" />
+        <label>Auto</label>
 
-        <input type="radio" data-dojo-type="dijit/form/RadioButton" data-dojo-attach-point="foldingTypeESMFold"
-          name="foldingType" value="esmfold" data-dojo-attach-event="onChange:onFoldingTypeChange" />
-        <label for="radio2">ESMFold</label>
+        <input type="radio" data-dojo-type="dijit/form/RadioButton" data-dojo-attach-point="toolBoltz" name="tool"
+          value="boltz" data-dojo-attach-event="onChange:onToolChange" />
+        <label>Boltz</label>
+
+        <input type="radio" data-dojo-type="dijit/form/RadioButton" data-dojo-attach-point="toolChai" name="tool"
+          value="chai" data-dojo-attach-event="onChange:onToolChange" />
+        <label>Chai</label>
+
+        <input type="radio" data-dojo-type="dijit/form/RadioButton" data-dojo-attach-point="toolAlphaFold" name="tool"
+          value="alphafold" data-dojo-attach-event="onChange:onToolChange" />
+        <label>AlphaFold</label>
+
+        <input type="radio" data-dojo-type="dijit/form/RadioButton" data-dojo-attach-point="toolESMFold" name="tool"
+          value="esmfold" data-dojo-attach-event="onChange:onToolChange" />
+        <label>ESMFold</label>
       </div>
     </div>
 
+    <!-- Input File -->
     <div class="appBox appShadow">
       <div class="headerrow">
-        <div style="width:85%;display:inline-block;">
-          <label class="appBoxLabel">Input/Output Files</label>
+        <div style="width:100%;display:inline-block;">
+          <label class="appBoxLabel">Input File</label>
           <div name="input-fasta-file" class="infobox iconbox infobutton dialoginfo">
             <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
           </div>
@@ -56,116 +70,279 @@
 
         <br>
 
-        <div class="appRow">
-          <div class="appFieldLong">
-            <label>Input sequences</label><br>
-            <div data-dojo-type="p3/widget/WorkspaceObjectSelector" data-dojo-attach-point="input_sequences"
-              name="input_sequences" style="width:100%" required="true"
-              data-dojo-props="type:['contigs'],multi:false,promptMessage:'Select or Upload FASTA files to your workspace for processing',missingMessage:'FASTA file must be provided.'">
+        <!-- Input source toggle -->
+        <div data-dojo-attach-point="inputSourceRow" class="appRow">
+          <input id="${id}_input_source_file" type="radio" data-dojo-type="dijit/form/RadioButton"
+            data-dojo-attach-point="inputSourceFile" name="input_source" value="file"
+            data-dojo-attach-event="onChange:onInputSourceChange" checked />
+          <label for="${id}_input_source_file">Input File</label>
+          <input id="${id}_input_source_paste" type="radio" data-dojo-type="dijit/form/RadioButton"
+            data-dojo-attach-point="inputSourcePaste" name="input_source" value="paste"
+            data-dojo-attach-event="onChange:onInputSourceChange" />
+          <label for="${id}_input_source_paste">Paste Sequence</label>
+          <span data-dojo-attach-point="boltzYamlOptionWrapper" style="display:none">
+            <input id="${id}_input_source_yaml" type="radio" data-dojo-type="dijit/form/RadioButton"
+              data-dojo-attach-point="inputSourceYaml" name="input_source" value="yaml_data"
+              data-dojo-attach-event="onChange:onInputSourceChange" />
+            <label for="${id}_input_source_yaml">Paste Boltz YAML</label>
+          </span>
+        </div>
+
+        <div data-dojo-attach-point="inputFileRow" class="appRow">
+          <div style="width:100%">
+            <div data-dojo-type="p3/widget/WorkspaceObjectSelector" data-dojo-attach-point="input_file"
+              name="input_file" style="width:100%" required="true"
+              data-dojo-props="type:['contigs'],multi:false,promptMessage:'Select or Upload a FASTA file to your workspace for processing',missingMessage:'Input file must be provided.'">
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="appRow">
-        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:50%">
-          <label class="paramlabel">Output Folder</label>
-
-          <div data-dojo-type="p3/widget/WorkspaceObjectSelector" name="output_path"
-            data-dojo-attach-point="output_path" style="width:300px" required="true"
-            data-dojo-props="title:'Select an Output Folder',autoSelectCurrent:true,selectionText:'Destination',title:'Select an Output Folder',type:['folder'],multi:false,placeHolder:'Output Folder'"
-            data-dojo-attach-event="onChange:onOutputPathChange">
+        <div data-dojo-attach-point="pasteSequenceRow" class="appRow" style="display:none">
+          <div style="width:100%">
+            <textarea name="fasta_data"
+              style="width:96%; height:120px; margin-left:10px; font-family: monospace; font-size:12px"
+              data-dojo-attach-point="fasta_data" data-dojo-type="dijit/form/Textarea"
+              data-dojo-attach-event="onChange:validate"
+              data-dojo-props="rows:8, placeholder:'&gt;sequence_name\nMASEQ...', intermediateChanges:true, trim:true">
+            </textarea>
           </div>
         </div>
 
-        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:40%">
-          <label class="paramlabel">Output Name</label><span class="charError"
-              style="color:red; font-size:8pt; padding-left:10px; font-weight:bold">&nbsp;</span><br>
-
-          <div data-dojo-type="p3/widget/WorkspaceFilenameValidationTextBox" name="output_file"
-            data-dojo-attach-event="onChange:checkOutputName" data-dojo-attach-point="output_file" style="width:300px"
-            required="true"
-            data-dojo-props="intermediateChanges:true,missingMessage:'Name must be provided for the job result',trim:true,placeHolder:'folding_output'">
+        <div data-dojo-attach-point="boltzYamlRow" class="appRow" style="display:none">
+          <div style="width:100%">
+            <textarea name="boltz_yaml_data"
+              style="width:96%; height:175px; margin-left:10px; font-family: monospace; font-size:12px"
+              data-dojo-attach-point="boltz_yaml_data" data-dojo-type="dijit/form/Textarea"
+              data-dojo-attach-event="onChange:validate"
+              data-dojo-props="rows:13, placeholder:'Paste Boltz YAML content here...', intermediateChanges:true, trim:true">
+            </textarea>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- AlphaFold Parameters -->
-    <div data-dojo-attach-point="alphafoldParamsBox" class="appBox appShadow">
+    <!-- Common Optional Parameters -->
+    <div class="appBox appShadow">
       <div class="headerrow">
-        <div style="width:85%;display:inline-block;">
-          <label class="appBoxLabel">Parameters</label>
-          <div name="parameters" class="infobox iconbox infobutton dialoginfo">
+        <div style="width:100%;display:inline-block;">
+          <label class="appBoxLabel">Common Parameters</label>
+          <div name="common-parameters" class="infobox iconbox infobutton dialoginfo">
             <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
           </div>
         </div>
       </div>
 
       <div class="appRow">
-        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:50%">
+        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:32%">
           <div class="headerrow">
-            <label class="paramlabel">Model Preset</label>
-            <div name="model_preset" class="infobox iconbox infobutton dialoginfo">
+            <label class="paramlabel">Num Samples</label>
+            <div name="num_samples" class="infobox iconbox infobutton dialoginfo">
               <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
             </div>
           </div>
 
-          <select name="model_preset" style="width:96%; margin-left:10px" data-dojo-type="dijit/form/Select"
-            data-dojo-attach-event="onChange:onChangeModelPreset" data-dojo-props="disabled:false"
-            data-dojo-attach-point="model_preset">
-            <option value="monomer">Monomer</option>
+          <input name="num_samples" style="width:100%" data-dojo-type="dijit/form/NumberSpinner"
+            data-dojo-attach-event="onChange:validate"
+            data-dojo-props="disabled:false,constraints:{min:1,max:100,places:0},value:1"
+            data-dojo-attach-point="num_samples">
+        </div>
+
+        <div class="appRowSegment" style="margin-left: 10px; text-align:left; width:32%">
+          <div class="headerrow">
+            <label class="paramlabel">Num Recycles</label>
+            <div name="num_recycles" class="infobox iconbox infobutton dialoginfo">
+              <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+            </div>
+          </div>
+
+          <input name="num_recycles" style="width:100%" data-dojo-type="dijit/form/NumberSpinner"
+            data-dojo-attach-event="onChange:validate"
+            data-dojo-props="disabled:false,constraints:{min:0,max:20,places:0},value:3"
+            data-dojo-attach-point="num_recycles">
+        </div>
+
+        <div class="appRowSegment" style="margin-left: 10px; text-align:left; width:32%">
+          <div class="headerrow">
+            <label class="paramlabel">Output Format</label>
+            <div name="output_format" class="infobox iconbox infobutton dialoginfo">
+              <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+            </div>
+          </div>
+
+          <select name="output_format" style="width:100%" data-dojo-type="dijit/form/Select"
+            data-dojo-attach-event="onChange:validate" data-dojo-props="disabled:false"
+            data-dojo-attach-point="output_format">
+            <option value="pdb" selected>PDB</option>
+            <option value="mmcif">mmCIF</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- MSA Parameters -->
+    <div data-dojo-attach-point="msaParamsBox" class="appBox appShadow">
+      <div class="headerrow">
+        <div style="width:100%;display:inline-block;">
+          <label class="appBoxLabel">Multiple Sequence Alignment</label>
+          <div name="msa-parameters" class="infobox iconbox infobutton dialoginfo">
+            <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- MSA mode radio buttons -->
+      <div class="appRow">
+        <input id="${id}_msa_mode_none" type="radio" data-dojo-type="dijit/form/RadioButton"
+          data-dojo-attach-point="msaRadioNone" name="msa_mode" value="none"
+          data-dojo-attach-event="onChange:onMsaModeChange" checked />
+        <label for="${id}_msa_mode_none">No MSA</label>
+
+        <input id="${id}_msa_mode_server" type="radio" data-dojo-type="dijit/form/RadioButton"
+          data-dojo-attach-point="msaRadioServer" name="msa_mode" value="server"
+          data-dojo-attach-event="onChange:onMsaModeChange" />
+        <label for="${id}_msa_mode_server">MSA Server</label>
+
+        <input id="${id}_msa_mode_upload" type="radio" data-dojo-type="dijit/form/RadioButton"
+          data-dojo-attach-point="msaRadioUpload" name="msa_mode" value="upload"
+          data-dojo-attach-event="onChange:onMsaModeChange" />
+        <label for="${id}_msa_mode_upload">Upload MSA</label>
+      </div>
+
+      <!-- No MSA content (nothing to show) -->
+      <div data-dojo-attach-point="msaContentNone"></div>
+
+      <!-- MSA Server content -->
+      <div data-dojo-attach-point="msaContentServer" style="display:none">
+        <div class="appRow">
+          <div style="width:100%">
+            <label class="paramlabel">MSA Server URL</label>
+            <div name="msa_server_url" class="infobox iconbox infobutton dialoginfo">
+              <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+            </div>
+            <input name="msa_server_url" style="width:100%" data-dojo-type="dijit/form/TextBox"
+              data-dojo-attach-event="onChange:validate"
+              data-dojo-props="disabled:false,placeHolder:'Default (public ColabFold MMseqs2 server)'"
+              data-dojo-attach-point="msa_server_url">
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload MSA content -->
+      <div data-dojo-attach-point="msaContentUpload" style="display:none">
+        <div class="appRow">
+          <div style="width:100%">
+            <div data-dojo-type="p3/widget/WorkspaceObjectSelector" data-dojo-attach-point="msa_file" name="msa_file"
+              style="width:100%" required="false"
+              data-dojo-props="type:['contigs','unspecified'],multi:false,promptMessage:'Select a precomputed MSA file (.a3m, .sto)',placeHolder:'Select MSA file from workspace'">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boltz-Specific Parameters -->
+    <div data-dojo-attach-point="boltzParamsBox" class="appBox appShadow" style="display:none">
+      <div class="headerrow">
+        <div style="width:100%;display:inline-block;">
+          <label class="appBoxLabel">Boltz Parameters</label>
+          <div name="boltz-parameters" class="infobox iconbox infobutton dialoginfo">
+            <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="appRow">
+        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:20%">
+          <div class="headerrow">
+            <label class="paramlabel">Use Potentials</label>
+            <div name="use_potentials" class="infobox iconbox infobutton dialoginfo">
+              <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+            </div>
+          </div>
+
+          <div data-dojo-type="dijit/form/CheckBox" name="use_potentials"
+            data-dojo-attach-event="onChange:validate" data-dojo-props="checked:false"
+            data-dojo-attach-point="use_potentials">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AlphaFold-Specific Parameters -->
+    <div data-dojo-attach-point="alphafoldParamsBox" class="appBox appShadow" style="display:none">
+      <div class="headerrow">
+        <div style="width:100%;display:inline-block;">
+          <label class="appBoxLabel">AlphaFold Parameters</label>
+          <div name="af2-parameters" class="infobox iconbox infobutton dialoginfo">
+            <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="appRow">
+        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:32%">
+          <div class="headerrow">
+            <label class="paramlabel">Model Preset</label>
+            <div name="af2_model_preset" class="infobox iconbox infobutton dialoginfo">
+              <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+            </div>
+          </div>
+
+          <select name="af2_model_preset" style="width:100%" data-dojo-type="dijit/form/Select"
+            data-dojo-attach-event="onChange:validate" data-dojo-props="disabled:false"
+            data-dojo-attach-point="af2_model_preset">
+            <option value="monomer" selected>Monomer</option>
             <option value="monomer_ptm">Monomer PTM</option>
             <option value="monomer_casp14">Monomer CASP14</option>
             <option value="multimer">Multimer</option>
           </select>
         </div>
 
-        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:40%">
+        <div class="appRowSegment" style="margin-left: 10px; text-align:left; width:32%">
           <div class="headerrow">
             <label class="paramlabel">Database Preset</label>
-            <div name="db_preset" class="infobox iconbox infobutton dialoginfo">
+            <div name="af2_db_preset" class="infobox iconbox infobutton dialoginfo">
               <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
             </div>
           </div>
 
-          <select name="db_preset" style="width:96%; margin-left:10px" data-dojo-type="dijit/form/Select"
-            data-dojo-attach-event="onChange:onChangeDatabasePreset" data-dojo-props="disabled:false"
-            data-dojo-attach-point="db_preset">
+          <select name="af2_db_preset" style="width:100%" data-dojo-type="dijit/form/Select"
+            data-dojo-attach-event="onChange:validate" data-dojo-props="disabled:false"
+            data-dojo-attach-point="af2_db_preset">
+            <option value="reduced_dbs" selected>Reduced databases</option>
             <option value="full_dbs">Full databases</option>
-            <option value="reduced_dbs">Reduced databases</option>
           </select>
+        </div>
+
+        <div class="appRowSegment" style="margin-left: 10px; text-align:left; width:32%">
+          <div class="headerrow">
+            <label class="paramlabel">Max Template Date</label>
+            <div name="af2_max_template_date" class="infobox iconbox infobutton dialoginfo">
+              <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+            </div>
+          </div>
+
+          <input name="af2_max_template_date" style="width:100%" data-dojo-type="dijit/form/TextBox"
+            data-dojo-attach-event="onChange:validate"
+            data-dojo-props="disabled:false,value:'2022-01-01',placeHolder:'YYYY-MM-DD'"
+            data-dojo-attach-point="af2_max_template_date">
         </div>
       </div>
     </div>
 
-    <!-- ESMFold Parameters -->
+    <!-- ESMFold-Specific Parameters -->
     <div data-dojo-attach-point="esmfoldParamsBox" class="appBox appShadow" style="display:none">
       <div class="headerrow">
-        <div style="width:85%;display:inline-block;">
-          <label class="appBoxLabel">Advanced Parameters</label>
-          <div name="parameters" class="infobox iconbox infobutton dialoginfo">
+        <div style="width:100%;display:inline-block;">
+          <label class="appBoxLabel">ESMFold Parameters</label>
+          <div name="esm-parameters" class="infobox iconbox infobutton dialoginfo">
             <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
           </div>
         </div>
       </div>
 
       <div class="appRow">
-        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:25%">
-          <div class="headerrow">
-            <label class="paramlabel">Number of Recycles</label>
-            <div name="num_recycles" class="infobox iconbox infobutton dialoginfo">
-              <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
-            </div>
-          </div>
-
-          <input name="num_recycles" style="width:96%; margin-left:10px" data-dojo-type="dijit/form/NumberSpinner"
-            data-dojo-attach-event="onChange:onNumRecyclesChange"
-            data-dojo-props="disabled:false,constraints:{min:0,max:4,places:0},value:4"
-            data-dojo-attach-point="num_recycles">
-        </div>
-
-        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:25%">
+        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:32%">
           <div class="headerrow">
             <label class="paramlabel">Chunk Size</label>
             <div name="chunk_size" class="infobox iconbox infobutton dialoginfo">
@@ -173,43 +350,13 @@
             </div>
           </div>
 
-          <input name="chunk_size" style="width:96%; margin-left:10px" data-dojo-type="dijit/form/NumberSpinner"
-            data-dojo-attach-event="onChange:onChunkSizeChange"
-            data-dojo-props="disabled:false,constraints:{min:16,max:512,places:0},value:128"
+          <input name="chunk_size" style="width:100%" data-dojo-type="dijit/form/NumberTextBox"
+            data-dojo-attach-event="onChange:validate"
+            data-dojo-props="disabled:false,constraints:{places:0},placeHolder:'Default'"
             data-dojo-attach-point="chunk_size">
         </div>
 
-        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:25%">
-          <div class="headerrow">
-            <label class="paramlabel">Max Sequence Length</label>
-            <div name="max_sequence_length" class="infobox iconbox infobutton dialoginfo">
-              <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
-            </div>
-          </div>
-
-          <input name="max_sequence_length" style="width:96%; margin-left:10px"
-            data-dojo-type="dijit/form/NumberSpinner" data-dojo-attach-event="onChange:onMaxSequenceLengthChange"
-            data-dojo-props="disabled:false,constraints:{min:100,max:2048,places:0},value:512"
-            data-dojo-attach-point="max_sequence_length">
-        </div>
-      </div>
-
-      <div class="appRow">
-        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:20%">
-          <div class="headerrow">
-            <label class="paramlabel">Batch Processing</label>
-            <div name="batch_sequences" class="infobox iconbox infobutton dialoginfo">
-              <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
-            </div>
-          </div>
-
-          <div data-dojo-type="dijit/form/CheckBox" name="batch_sequences"
-            data-dojo-attach-event="onChange:onBatchSequencesChange" data-dojo-props="checked:false"
-            data-dojo-attach-point="batch_sequences">
-          </div>
-        </div>
-
-        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:25%">
+        <div class="appRowSegment" style="margin-left: 10px; text-align:left; width:32%">
           <div class="headerrow">
             <label class="paramlabel">Max Tokens per Batch</label>
             <div name="max_tokens_per_batch" class="infobox iconbox infobutton dialoginfo">
@@ -217,69 +364,131 @@
             </div>
           </div>
 
-          <input name="max_tokens_per_batch" style="width:96%; margin-left:10px"
-            data-dojo-type="dijit/form/NumberSpinner" data-dojo-attach-event="onChange:onMaxTokensPerBatchChange"
-            data-dojo-props="disabled:true,constraints:{min:512,max:4096,places:0},value:1024"
+          <input name="max_tokens_per_batch" style="width:100%" data-dojo-type="dijit/form/NumberTextBox"
+            data-dojo-attach-event="onChange:validate"
+            data-dojo-props="disabled:false,constraints:{places:0},placeHolder:'Default'"
             data-dojo-attach-point="max_tokens_per_batch">
         </div>
 
-        <!-- <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:33%">
+        <div class="appRowSegment" style="margin-left: 10px; text-align:left; width:20%">
           <div class="headerrow">
-            <label class="paramlabel">Use GPU</label>
-            <div name="use_gpu" class="infobox iconbox infobutton dialoginfo">
+            <label class="paramlabel">FP16</label>
+            <div name="fp16" class="infobox iconbox infobutton dialoginfo">
               <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
             </div>
           </div>
 
-          <div data-dojo-type="dijit/form/CheckBox" name="use_gpu" data-dojo-attach-event="onChange:onUseGpuChange"
-            data-dojo-props="checked:true" data-dojo-attach-point="use_gpu">
+          <div data-dojo-type="dijit/form/CheckBox" name="fp16" data-dojo-attach-event="onChange:validate"
+            data-dojo-props="checked:false" data-dojo-attach-point="fp16">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced Parameters -->
+    <div class="appBox appShadow">
+      <div class="headerrow" data-dojo-attach-event="onclick:toggleAdvancedParams" style="cursor:pointer">
+        <div style="width:100%;display:inline-block;">
+          <label class="appBoxLabel" style="cursor:pointer">Advanced Parameters</label>
+          <div name="advanced-parameters" class="infobox iconbox infobutton dialoginfo">
+            <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+          </div>
+          <span data-dojo-attach-point="advancedParamsArrow" style="float:right; font-size:12px; color:#999; line-height:24px;">&#9660;</span>
+        </div>
+      </div>
+
+      <div data-dojo-attach-point="advancedParamsContent" style="display:none">
+        <div class="appRow">
+          <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:49%">
+            <div class="headerrow">
+              <label class="paramlabel">Sampling Steps</label>
+              <div name="sampling_steps" class="infobox iconbox infobutton dialoginfo">
+                <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+              </div>
+            </div>
+
+            <input name="sampling_steps" style="width:100%" data-dojo-type="dijit/form/NumberSpinner"
+              data-dojo-attach-event="onChange:validate"
+              data-dojo-props="disabled:false,constraints:{min:1,max:1000,places:0},value:200"
+              data-dojo-attach-point="sampling_steps">
+          </div>
+
+          <div class="appRowSegment" style="margin-left: 10px; text-align:left; width:49%">
+            <div class="headerrow">
+              <label class="paramlabel">Seed</label>
+              <div name="seed" class="infobox iconbox infobutton dialoginfo">
+                <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
+              </div>
+            </div>
+
+            <input name="seed" style="width:100%" data-dojo-type="dijit/form/NumberTextBox"
+              data-dojo-attach-event="onChange:validate"
+              data-dojo-props="disabled:false,constraints:{places:0},value:42" data-dojo-attach-point="seed">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output -->
+    <div class="appBox appShadow">
+      <div class="headerrow">
+        <div style="width:100%;display:inline-block;">
+          <label class="appBoxLabel">Output</label>
+        </div>
+      </div>
+
+      <div class="appRow">
+        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:49%">
+          <label class="paramlabel">Output Folder</label>
+
+          <div data-dojo-type="p3/widget/WorkspaceObjectSelector" name="output_path"
+            data-dojo-attach-point="output_path" style="width:100%" required="true"
+            data-dojo-props="title:'Select an Output Folder',autoSelectCurrent:true,selectionText:'Destination',title:'Select an Output Folder',type:['folder'],multi:false,placeHolder:'Output Folder'"
+            data-dojo-attach-event="onChange:onOutputPathChange">
           </div>
         </div>
 
-        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:32%">
-          <div class="headerrow">
-            <label class="paramlabel">CPU Offloading</label>
-            <div name="cpu_offload" class="infobox iconbox infobutton dialoginfo">
-              <i class="fa icon-info-circle fa" title="click to open info dialog"></i>
-            </div>
+        <div class="appRowSegment" style="margin-left: 0px; text-align:left; width:49%">
+          <label class="paramlabel">Output Name</label><span class="charError"
+            style="color:red; font-size:8pt; padding-left:10px; font-weight:bold">&nbsp;</span><br>
+
+          <div data-dojo-type="p3/widget/WorkspaceFilenameValidationTextBox" name="output_file"
+            data-dojo-attach-event="onChange:checkOutputName" data-dojo-attach-point="output_file" style="width:100%"
+            required="true"
+            data-dojo-props="intermediateChanges:true,missingMessage:'Name must be provided for the job result',trim:true,placeHolder:'folding_output'">
           </div>
-
-          <div data-dojo-type="dijit/form/CheckBox" name="cpu_offload"
-            data-dojo-attach-event="onChange:onCpuOffloadChange" data-dojo-props="checked:false"
-            data-dojo-attach-point="cpu_offload">
-          </div>
-        </div> -->
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="appSubmissionArea">
-    <div data-dojo-attach-point="workingMessage" class="messageContainer workingMessage"
-      style="margin-top:10px; text-align:center;">
-      Submitting Folding job
-    </div>
-
-    <div data-dojo-attach-point="errorMessage" class="messageContainer errorMessage"
-      style="margin-top:10px; text-align:center;">
-      Error submitting job
-    </div>
-
-    <div data-dojo-attach-point="submittedMessage" class="messageContainer submittedMessage"
-      style="margin-top:10px; text-align:center;">
-      Your job has been submitted successfully. Please visit your <a
-        data-dojo-attach-event="onclick:openJobsList"><u>Jobs List</u> </a>to check the status of your job and
-      access the results.
-    </div>
-
-    <div style="margin-top: 10px; text-align:center;">
-      <div data-dojo-attach-point="cancelButton" data-dojo-attach-event="onClick:onCancel"
-        data-dojo-type="dijit/form/Button">Cancel
+    <div class="appSubmissionArea">
+      <div data-dojo-attach-point="workingMessage" class="messageContainer workingMessage"
+        style="margin-top:10px; text-align:center;">
+        Submitting Protein Structure Prediction job
       </div>
 
-      <div data-dojo-attach-point="resetButton" type="reset" data-dojo-type="dijit/form/Button">Reset
+      <div data-dojo-attach-point="errorMessage" class="messageContainer errorMessage"
+        style="margin-top:10px; text-align:center;">
+        Error submitting job
       </div>
 
-      <div data-dojo-attach-point="submitButton" type="submit" data-dojo-type="dijit/form/Button">Submit
+      <div data-dojo-attach-point="submittedMessage" class="messageContainer submittedMessage"
+        style="margin-top:10px; text-align:center;">
+        Your job has been submitted successfully. Please visit your <a
+          data-dojo-attach-event="onclick:openJobsList"><u>Jobs List</u> </a>to check the status of your job and
+        access the results.
+      </div>
+
+      <div style="margin-top: 10px; text-align:center;">
+        <div data-dojo-attach-point="cancelButton" data-dojo-attach-event="onClick:onCancel"
+          data-dojo-type="dijit/form/Button">Cancel
+        </div>
+
+        <div data-dojo-attach-point="resetButton" type="reset" data-dojo-type="dijit/form/Button">Reset
+        </div>
+
+        <div data-dojo-attach-point="submitButton" type="submit" data-dojo-type="dijit/form/Button">Submit
+        </div>
       </div>
     </div>
   </div>
