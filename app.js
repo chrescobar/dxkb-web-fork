@@ -85,6 +85,10 @@ app.use(helmet({
 }));
 
 var workspaceDownloadServiceURL = config.get('workspaceDownloadServiceURL');
+if (!workspaceDownloadServiceURL || workspaceDownloadServiceURL.charAt(0) !== '/'
+    || workspaceDownloadServiceURL.indexOf('//') === 0) {
+  workspaceDownloadServiceURL = '/services/WorkspaceDownload';
+}
 app.use(workspaceDownloadServiceURL,
   workspaceDownloadProxy.createWorkspaceDownloadProxy(
     config.get('workspaceDownloadServiceTarget'),
@@ -147,7 +151,7 @@ app.use(function (req, res, next) {
     probModelSeedServiceURL: config.get('probModelSeedServiceURL'), // for dashboard
     shockServiceURL: config.get('shockServiceURL'), // for dashboard
     workspaceServiceURL: config.get('workspaceServiceURL'),
-    workspaceDownloadServiceURL: config.get('workspaceDownloadServiceURL'),
+    workspaceDownloadServiceURL: workspaceDownloadServiceURL,
     appBaseURL: config.get('appBaseURL'),
     appServiceURL: config.get('appServiceURL'),
     dataServiceURL: config.get('dataServiceURL'),

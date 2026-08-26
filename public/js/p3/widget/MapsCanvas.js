@@ -38,6 +38,17 @@ define([
     },
     flywayJSON: [],
 
+    postCreate: function () {
+      this.inherited(arguments);
+      this.partitionModalNodes = [];
+      this.partitionHandles = [];
+    },
+
+    destroy: function () {
+      this.clearPartition();
+      this.inherited(arguments);
+    },
+
     _setStateAttr: function (state) {
       this._set('state', state);
 
@@ -156,6 +167,8 @@ define([
         'Content-Type': 'application/rqlquery+x-www-form-urlencoded',
         data: `in(host_identifier,(${hostIds.join(',')})),sort(+collection_date)&limit(1000)`
       }).then(lang.hitch(this, function (data) {
+        if (this._destroyed) return;
+
         // create date -> count object
         const collectionDateMap = data.reduce((p, d) => {
           if (d.collection_date) {
@@ -220,7 +233,7 @@ define([
         const totalRecords = dates.reduce((sum, d) => sum + d.count, 0);
 
         // Render a summary banner above the list so users see immediate feedback
-        const dataDiv = dojo.byId('partitionDataDiv');
+        const dataDiv = this.partitionDataNode;
         if (dataDiv) {
           const banner = domConstruct.create('div', {
             'class': 'sdm-partition-banner',
@@ -238,7 +251,7 @@ define([
         let i = 0;
         for (let date of dates) {
           if (date.count > 0) {
-            const id = i++;
+            const id = this.id + '-' + i++;
 
             const dateText = this.formatDate(date.startDate, dateFormat, '/') + ' - ' + this.formatDate(date.endDate, dateFormat, '/');
 
@@ -262,38 +275,7 @@ define([
                 'innerHTML': `${dateText} (${date.count})`
               }, partitionItemDiv);
 
-            dojo.place(partitionItemDiv, dojo.byId('partitionDataDiv'));
-
-            // Toggle modal — position relative to the viewport so it can escape
-            // the sidebar's overflow-clipped scroll container.
-            on(dom.byId(`pb-checkbox-${id}`), 'click', function (evt) {
-              const modal = document.getElementById(`partition-modal-${id}`);
-              if (!modal) return;
-              const checkboxEl = document.getElementById(`pb-checkbox-${id}`);
-              const labelEl = checkboxEl ? checkboxEl.nextElementSibling : null;
-              const anchorRect = (labelEl || checkboxEl).getBoundingClientRect();
-
-              const isHidden = modal.style.display === 'none' || !modal.style.display;
-              if (isHidden) {
-                modal.style.display = 'block';
-                // Place modal to the right of the checkbox label; if it would
-                // go off-screen, fall back to placing it to the left.
-                const modalWidth = 360;
-                let left = anchorRect.right + 10;
-                if (left + modalWidth > window.innerWidth - 8) {
-                  left = Math.max(8, anchorRect.left - modalWidth - 10);
-                }
-                let top = anchorRect.top;
-                const modalHeight = modal.offsetHeight || 220;
-                if (top + modalHeight > window.innerHeight - 8) {
-                  top = Math.max(8, window.innerHeight - modalHeight - 8);
-                }
-                modal.style.top = top + 'px';
-                modal.style.left = left + 'px';
-              } else {
-                modal.style.display = 'none';
-              }
-            });
+            dojo.place(partitionItemDiv, this.partitionDataNode);
 
             // Compute test stats — color the chip with the same legend buckets
             const testedCount = this.getTestedCountByLocation(date.items);
@@ -316,11 +298,10 @@ define([
             const partitionModalInnerDiv = domConstruct.create('div', null, partitionModalDiv);
 
             // Create button for closing modal
-            domConstruct.create('button',
+            const closeModalButton = domConstruct.create('button',
               {
                 'type': 'button',
                 'class': 'partition-modal-close-btn',
-                'onclick': `document.getElementById('partition-modal-${id}').style.display='none';document.getElementById('pb-checkbox-${id}').checked=false;`,
                 'draggable': 'false',
                 'aria-label': 'Close',
                 'title': 'Close',
@@ -366,19 +347,51 @@ define([
             // Attach modal to body so it can render above the sidebar
             // overflow:auto container without being clipped.
             document.body.appendChild(partitionModalDiv);
+            this.partitionModalNodes.push(partitionModalDiv);
 
-            // Overlap selected modal over others
-            on(dom.byId(`partition-modal-${id}`), 'click', function (evt) {
-              dojo.query('.partition-modal').style('z-index', '1');
-              dojo.query(`#partition-modal-${id}`).style('z-index', '2');
-            });
+            // Toggle modal — position relative to the viewport so it can escape
+            // the sidebar's overflow-clipped scroll container.
+            const checkbox = partitionItemDiv.querySelector('input');
+            this.partitionHandles.push(on(checkbox, 'click', function (evt) {
+              const checkboxEl = evt.currentTarget;
+              const anchor = checkboxEl.nextElementSibling || checkboxEl;
+              const anchorRect = anchor.getBoundingClientRect();
+              const isHidden = partitionModalDiv.style.display === 'none' || !partitionModalDiv.style.display;
+              if (isHidden) {
+                partitionModalDiv.style.display = 'block';
+                const modalWidth = 360;
+                let left = anchorRect.right + 10;
+                if (left + modalWidth > window.innerWidth - 8) {
+                  left = Math.max(8, anchorRect.left - modalWidth - 10);
+                }
+                let top = anchorRect.top;
+                const modalHeight = partitionModalDiv.offsetHeight || 220;
+                if (top + modalHeight > window.innerHeight - 8) {
+                  top = Math.max(8, window.innerHeight - modalHeight - 8);
+                }
+                partitionModalDiv.style.top = top + 'px';
+                partitionModalDiv.style.left = left + 'px';
+              } else {
+                partitionModalDiv.style.display = 'none';
+              }
+            }));
+            this.partitionHandles.push(on(closeModalButton, 'click', function () {
+              partitionModalDiv.style.display = 'none';
+              checkbox.checked = false;
+            }));
+            this.partitionHandles.push(on(partitionModalDiv, 'click', lang.hitch(this, function () {
+              this.partitionModalNodes.forEach(function (modal) {
+                modal.style.zIndex = '1';
+              });
+              partitionModalDiv.style.zIndex = '2';
+            })));
           }
         }
 
         // Scroll the partition results into view inside the sidebar so users
         // see them immediately instead of having to scroll the sidebar.
-        const banner = dojo.byId('partitionDataDiv')
-          ? dojo.byId('partitionDataDiv').querySelector('.sdm-partition-banner')
+        const banner = this.partitionDataNode
+          ? this.partitionDataNode.querySelector('.sdm-partition-banner')
           : null;
         if (banner && typeof banner.scrollIntoView === 'function') {
           setTimeout(function () {
@@ -403,8 +416,11 @@ define([
 
     // Clear existing partition info
     clearPartition: function () {
-      dojo.empty('partitionDataDiv');
-      dojo.query('.partition-modal').forEach(dojo.destroy);
+      (this.partitionHandles || []).forEach(function (handle) { handle.remove(); });
+      this.partitionHandles = [];
+      if (this.partitionDataNode) domConstruct.empty(this.partitionDataNode);
+      (this.partitionModalNodes || []).forEach(domConstruct.destroy);
+      this.partitionModalNodes = [];
     },
 
     formatDate: function (t, a, s) {
